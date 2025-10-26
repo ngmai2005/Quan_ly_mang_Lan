@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Tải lên file PCAP để phân tích</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h2>Tải file PCAP để phân tích lưu lượng mạng</h2>
+    <form action="/" method="POST" enctype="multipart/form-data">
+        <input type="file" name="pcap_file" accept=".pcap" required>
+        <button type="submit">Phân tích</button>
+    </form>
+</body>
+</html>

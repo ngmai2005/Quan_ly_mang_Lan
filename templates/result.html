@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Kết quả Phân tích</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    body { font-family: Arial; background: #f6f8fa; text-align: center; padding: 40px; }
+    h1 { color: #222; margin-bottom: 20px; }
+    table {
+      margin: 0 auto;
+      border-collapse: collapse;
+      width: 70%;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      background: #007bff;
+      color: #fff;
+    }
+    tr:hover { background: #f1f1f1; }
+    a, button {
+      text-decoration: none;
+      display: inline-block;
+      margin-top: 20px;
+      padding: 10px 20px;
+      border-radius: 5px;
+      font-weight: bold;
+    }
+    a {
+      background: #6c757d;
+      color: white;
+    }
+    button {
+      background: #dc3545;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover { background: #c82333; }
+  </style>
+</head>
+<body>
+
+  <h1>📊 Kết quả Phân tích</h1>
+
+  {% if attack_ips %}
+  <p>Phát hiện {{ attack_ips|length }} IP tấn công:</p>
+  <table>
+    <tr>
+      <th>Địa chỉ IP</th>
+      <th>Mức độ nguy hiểm</th>
+      <th>Thời gian phát hiện</th>
+      <th>Hành động</th>
+    </tr>
+    {% for ip in attack_ips %}
+    <tr>
+      <td>{{ ip }}</td>
+      <td>⚠️ Cao</td>
+      <td>{{ time_now }}</td>
+      <td>
+        <form action="/block_ip" method="POST">
+          <input type="hidden" name="ip" value="{{ ip }}">
+          <button type="submit">Chặn IP</button>
+        </form>
+        <form action="/unblock_ip" method="POST">
+          <input type="hidden" name="ip" value="{{ ip }}">
+          <button type="submit" style="background:#28a745;">Bỏ chặn</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p>✅ Không phát hiện IP tấn công nào.</p>
+  {% endif %}
+
+  <br>
+  <a href="/">← Quay lại</a>
+
+</body>
+</html>

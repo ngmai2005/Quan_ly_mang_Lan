@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <title>Dashboard LOGLAN</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>📊 Dashboard Giám sát Tấn công Mạng</h1>
+
+    <!-- ==== CẢNH BÁO ==== -->
+    <section>
+      <h2>Cảnh báo gần đây</h2>
+      {% if alerts %}
+      <div class="table-wrap scroll" id="alertsScroll">
+        <table id="alerts_table">
+          <thead>
+            <tr>
+              <th>Thời gian</th>
+              <th>IP nguồn</th>
+              <th>Số gói</th>
+              <th>Mức độ nguy hiểm</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for a in alerts %}
+            {% set conf = a.get('confidence', 0.0)|float %}
+            <tr>
+              <td>{{ a.timestamp }}</td>
+              <td>{{ a.src_ip }}</td>
+              <td>{{ a.packet_count }}</td>
+              <td>
+                {% if conf > 0.8 %}
+                  <span style="color:red;font-weight:bold;">Rất cao ({{ '%.2f' % conf }})</span>
+                {% elif conf > 0.5 %}
+                  <span style="color:orange;">Trung bình ({{ '%.2f' % conf }})</span>
+                {% else %}
+                  <span style="color:green;">Thấp ({{ '%.2f' % conf }})</span>
+                {% endif %}
+              </td>
+              <td><button class="block-btn" data-ip="{{ a.src_ip }}">Chặn</button></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+        <p>✅ Không có cảnh báo</p>
+      {% endif %}
+    </section>
+
+
+    <!-- ==== BIỂU ĐỒ ==== -->
+    <section style="margin-top:30px;">
+      <h2>Biểu đồ: Số cảnh báo theo IP</h2>
+      <canvas id="chartAlerts" width="800" height="300"></canvas>
+    </section>
+
+    <!-- ==== IP BỊ CHẶN ==== -->
+    <section style="margin-top:30px;">
+      <h2>Danh sách IP đã chặn</h2>
+      <div class="scroll" id="blockedScroll">
+        <ul id="blockedList">
+          {% for b in blocked %}
+            <li>{{ b }} <button class="unblock-btn" data-ip="{{ b }}">Bỏ chặn</button></li>
+          {% else %}
+            <li>Chưa có IP bị chặn</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </section>
+
+
+    <hr>
+    <a href="/">← Upload PCAP khác</a>
+  </div>
+
+<script>
+async function fetchAlerts(){
+  const r = await fetch('/api/alerts');
+  return await r.json();
+}
+async function fetchBlocked(){
+  const r = await fetch('/api/blocked');
+  return await r.json();
+}
+function makeChart(labels, data){
+  const ctx = document.getElementById('chartAlerts').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: { labels: labels, datasets: [{ label: 'Số cảnh báo', data: data }] },
+    options: { responsive: true }
+  });
+}
+window.addEventListener('DOMContentLoaded', async ()=> {
+  const alerts = await fetchAlerts();
+  const count = {};
+  alerts.forEach(a => { count[a.src_ip] = (count[a.src_ip]||0) + 1; });
+  const labels = Object.keys(count);
+  const data = labels.map(l=>count[l]);
+  if(labels.length) makeChart(labels, data);
+
+  // Nút chặn
+  document.querySelectorAll('.block-btn').forEach(btn=>{
+    btn.onclick = async ()=> {
+      const ip = btn.dataset.ip;
+      const simulate = confirm("Chạy chế độ giả lập? (OK=Simulate, Cancel=Thực thi thật - cần quyền Admin)");
+      const res = await fetch('/api/block', {
+        method:'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ip, simulate})
+      });
+      const j = await res.json();
+      alert(j.message || JSON.stringify(j));
+      if(j.ok) location.reload();
+    };
+  });
+
+  // Nút bỏ chặn
+  document.querySelectorAll('.unblock-btn').forEach(btn=>{
+    btn.onclick = async ()=> {
+      const ip = btn.dataset.ip;
+      const simulate = confirm("Chạy chế độ giả lập? (OK=Simulate, Cancel=Thực thi thật - cần quyền Admin)");
+      const res = await fetch('/api/unblock', {
+        method:'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ip, simulate})
+      });
+      const j = await res.json();
+      alert(j.message || JSON.stringify(j));
+      if(j.ok) location.reload();
+    };
+  });
+});
+</script>
+
+</body>
+</html>
