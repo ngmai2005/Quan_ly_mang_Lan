@@ -103,7 +103,6 @@ window.addEventListener('DOMContentLoaded', async ()=> {
   const data = labels.map(l=>count[l]);
   if(labels.length) makeChart(labels, data);
 
-  // Nút chặn
   document.querySelectorAll('.block-btn').forEach(btn=>{
     btn.onclick = async ()=> {
       const ip = btn.dataset.ip;

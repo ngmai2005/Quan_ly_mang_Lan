@@ -150,5 +150,5 @@ def api_unblock():
 
 
 if __name__ == "__main__":
-    print("💡 Lưu ý: cần chạy bằng quyền Administrator để chặn IP thật hoạt động.")
+    print("Lưu ý: cần chạy bằng quyền Administrator để chặn IP thật hoạt động.")
     app.run(debug=True)
